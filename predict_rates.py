@@ -1,3 +1,5 @@
+
+
 import os
 import pandas as pd
 from sklearn.preprocessing import StandardScaler
@@ -16,7 +18,7 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import r2_score
 from sklearn.metrics import mean_absolute_error
 
-class PredictRates:
+class Congregate:
     
 
     def __init__(self, dir: str, country: str) -> pd.DataFrame:
@@ -29,17 +31,17 @@ class PredictRates:
             if os.path.isfile(pathname):
                 if os.path.splitext(pathname)[1] == ".csv":
                     self._fname_pd_dict[filename] = pd.read_csv(pathname)
-        
-        sorted_stock_index = self._fname_pd_dict[f"{self._country}_monthly_stock_index.csv"]
-        sorted_stock_index = sorted_stock_index.groupby("Date")["Close"].mean()
+
+        sorted_stock_index = self.fname_pd_dict[f"{self.country}_monthly_stock_index.csv"]
+        sorted_stock_index = sorted_stock_index[["Date", "Close"]].groupby("Date")["Close"].mean()
         sorted_stock_index = sorted_stock_index.reset_index()
 
         
-        cpi = self._fname_pd_dict[f"{self._country}_quarterly_cpi.csv"]
+        cpi = self._fname_pd_dict[f"{self._country}_quarterly_cpi.csv"]["Date", "CPI"]
 
         gdp = self._fname_pd_dict[f"{self._country}_quarterly_gdp.csv"][["Date", "GDP per capita"]][:56]
 
-        interest_rate = self._fname_pd_dict[f"{self._country}_quarterly_interest_rate.csv"]
+        interest_rate = self._fname_pd_dict[f"{self._country}_quarterly_interest_rate.csv"][["Date", "Interest Rate"]]
 
         unemployment_rate = self._fname_pd_dict[f"{self._country}_quarterly_unemployment_rate.csv"][["Date", "Unemployment Rate"]][:56]
 
@@ -48,6 +50,7 @@ class PredictRates:
         merged = merged_zero.merge(merged_one, left_on="Date", right_on="Date")
         
         self._df: pd.DataFrame = pd.merge(sorted_stock_index, merged, on="Date")
+        self._x_train_std, self.x_test_std, self.y_train, self.y_test = self.preprocess_standard()
 
 
     def plot_heatmap(self) -> None:
@@ -56,7 +59,7 @@ class PredictRates:
         """
         # Build multivariate linkage chart
         sns.pairplot(self._df, height=1.0)
-        plt.savefig("Results/" + self._country + "_multivariate_linkage_chart.png")
+        plt.savefig(self._country + "multivariate_linkage_chart.png")
         plt.close("all")
 
         # Calculate the correlation coefficient matrix
@@ -68,11 +71,11 @@ class PredictRates:
         # Param: annot=bool, fmt="decimals", cmap="color" 
         sns.heatmap(corr, annot=True, fmt=".2f", cmap="Purples", linewidths=.5,
                     vmax=1, vmin=-1, center=0, square=True)
-        plt.savefig("Results/" + self._country + "_max_corr.png", facecolor="azure")
+        plt.savefig(self._country + "ca_max_corr.png", facecolor="azure")
         plt.close("all")
 
 
-    def preprocess_standard(self) -> None:
+    def preprocess_standard(self) -> pd.DataFrame:
         """
         Split the dataset for training data and test data and work on
         standardization.
@@ -90,6 +93,8 @@ class PredictRates:
         self._x_train_std = sc.transform(x_train)
         self._x_test_std = sc.transform(x_test)
 
+        return self._x_train_std, self._x_test_std, self._y_train, self._y_test
+
 
     def ridge_regression(self, ALPHA: float=10.0) -> None:
         """
@@ -98,7 +103,7 @@ class PredictRates:
         self._ridge = Ridge(alpha=ALPHA)
         self._ridge.fit(self._x_train_std, self._y_train)
 
-        pred_ridge = self._ridge.predict(self._x_test_std)
+        pred_ridge = ridge.predict(self._x_test_std)
 
         # Evaluation #1: R^2
         # The closer the predicted values are to the observed values,
@@ -116,93 +121,117 @@ class PredictRates:
         print(f"MAE : {mae_ridge}")
 
         # Regression Coefficient
-        print(f"Coef: {self._ridge.coef_}")
+        print(f"Coef: {ridge.coef_}")
 
         # Scatterplot between predicted and observed data
         plt.xlabel("pred_ridge")
         plt.ylabel("y_test")
         plt.scatter(pred_ridge, self._y_test)
-        plt.savefig("Results/" + self._country + "_Ridge Regression")
+        plt.show()
 
 
-    def lasso_regression(self, ALPHA: float=.05) -> None:
-        """
-        """
-        lasso = Lasso(alpha=ALPHA)
-        lasso.fit(self._x_train_std, self._y_train)
+def lasso_regression(self, ALPHA: float=.05) -> None:
+    """
+    """
+    lasso = Lasso(alpha=ALPHA)
+    lasso.fit(self._x_train_std, self._y_train)
 
-        pred_lasso = lasso.predict(self._x_test_std)
+    pred_lasso = lasso.predict(self._x_test_std)
 
-        # Evaluation #1: R^2
-        r2_lasso = r2_score(self._y_test, pred_lasso)
+    # Evaluation #1: R^2
+    r2_lasso = r2_score(self._y_test, pred_lasso)
 
-        # Evaluation #2: MAE
-        mae_lasso = mean_absolute_error(self._y_test, pred_lasso)
+    # Evaluation #2: MAE
+    mae_lasso = mean_absolute_error(self._y_test, pred_lasso)
 
-        print("Evaluation: Lasso Regression")
-        print("R2 : %.3f" % r2_lasso)
-        print("MAE : %.3f" % mae_lasso)
+    print("Evaluation: Lasso Regression")
+    print("R2 : %.3f" % r2_lasso)
+    print("MAE : %.3f" % mae_lasso)
 
-        # Regression Coefficient
-        print("Coef = ", lasso.coef_)
+    # Regression Coefficient
+    print("Coef = ", lasso.coef_)
 
-        # Scatterplot between predicted and observed data
-        plt.xlabel("pred_lasso")
-        plt.ylabel("y_test")
-        plt.scatter(pred_lasso, self._y_test)
-        plt.savefig("Results/" + self._country + "_Lasso Regression")
-
-
-    def elasticnet_regression(self, ALPHA: float=.05) -> None:
-        """
-        """
-        elasticnet = ElasticNet(alpha=ALPHA)
-        elasticnet.fit(self._x_train_std, self._y_train)
-
-        pred_elasticnet = elasticnet.predict(self._x_test_std)
-
-        # Evaluation #1: R^2
-        r2_elasticnet = r2_score(self._y_test, pred_elasticnet)
-
-        # Evaluation #2: MAE
-        mae_elasticnet = mean_absolute_error(self._y_test, pred_elasticnet)
-
-        print("Evaluation: ElasticNet Regression")
-        print("R2 : %.3f" % r2_elasticnet)
-        print("MAE : %.3f" % mae_elasticnet)
-
-        # Regression Coefficient
-        print("Coef = ", elasticnet.coef_)
-
-        # Scatterplot between predicted and observed data
-        plt.xlabel("pred_ElasticNet")
-        plt.ylabel("y_test")
-        plt.scatter(pred_elasticnet, self._y_test)
-        plt.savefig("Results/" + self._country + "_ElasticNet Regression")
+    # Scatterplot between predicted and observed data
+    plt.xlabel("pred_lasso")
+    plt.ylabel("y_test")
+    plt.scatter(pred_lasso, self._y_test)
+    plt.show()
 
 
-    def rf_regression(self, ALPHA: float=.05):
-        """
-        """
-        rf = RandomForestRegressor()
-        rf.fit(self._x_train_std, self._y_train)
+def elasticnet_regression(x_train_std: pd.DataFrame, y_train: pd.DataFrame,
+                     x_test_std: pd.DataFrame, y_test: pd.DataFrame,
+                     ALPHA: float=.05) -> None:
+    """
+    """
+    elasticnet = ElasticNet(alpha=ALPHA)
+    elasticnet.fit(x_train_std, y_train)
 
-        pred_rf = rf.predict(self._x_test_std)
-        # Evaluation #1: R^2
-        r2_rf = r2_score(self._y_test, pred_rf)
+    pred_elasticnet = elasticnet.predict(x_test_std)
 
-        # Evaluation #2: MAE
-        mae_rf = mean_absolute_error(self._y_test, pred_rf)
+    # Evaluation #1: R^2
+    r2_elasticnet = r2_score(y_test, pred_elasticnet)
 
-        print("Evaluation: Random Forest Regression")
-        print("R2 : %.3f" % r2_rf)
-        print("MAE : %.3f" % mae_rf)
+    # Evaluation #2: MAE
+    mae_elasticnet = mean_absolute_error(y_test, pred_elasticnet)
 
-        # Regression Coefficient
-        print("Coef = ", rf.feature_importances_)
+    print("Evaluation: ElasticNet Regression")
+    print("R2 : %.3f" % r2_elasticnet)
+    print("MAE : %.3f" % mae_elasticnet)
 
-        # Scatterplot between predicted and observed data
-        plt.xlabel("pred_rf")
-        plt.ylabel("y_test")
-        plt.scatter(pred_rf, self._y_test)
-        plt.savefig("Results/" + self._country + "_Random Forest Regression")
+    # Regression Coefficient
+    print("Coef = ", elasticnet.coef_)
+
+    # Scatterplot between predicted and observed data
+    plt.xlabel("pred_lasso")
+    plt.ylabel("y_test")
+    plt.scatter(pred_elasticnet, y_test)
+    plt.show()
+
+
+def rf_regression(x_train_std: pd.DataFrame, y_train: pd.DataFrame,
+                 x_test_std: pd.DataFrame, y_test: pd.DataFrame,
+                 ALPHA: float=.05):
+    """
+    """
+    rf = RandomForestRegressor()
+    rf.fit(x_train_std, y_train)
+
+    pred_rf = rf.predict(x_test_std)
+    # Evaluation #1: R^2
+    r2_rf = r2_score(y_test, pred_rf)
+
+    # Evaluation #2: MAE
+    mae_rf = mean_absolute_error(y_test, pred_rf)
+
+    print("Evaluation: ElasticNet Regression")
+    print("R2 : %.3f" % r2_rf)
+    print("MAE : %.3f" % mae_rf)
+
+    # Regression Coefficient
+    print("Coef = ", rf.feature_importances_)
+
+    # Scatterplot between predicted and observed data
+    plt.xlabel("pred_rf")
+    plt.ylabel("y_test")
+    plt.scatter(pred_rf, y_test)
+    plt.show()    
+
+
+# def main():
+#     # Building single DataFrame from different datasets 
+#     directory = "./Data/Canada/"
+#     canada_df = (directory)
+
+#     # Plotting heatmap and understand the relation between the variables
+#     plot_heatmap(canada_df, directory)
+
+#     # Preprocess of Data
+#     x_train_std, x_test_std, y_train, y_test = preprocess_standard(canada_df)
+
+#     ridge_regression(x_train_std, y_train, x_test_std, y_test, ALPHA=10.0)
+#     lasso_regression(x_train_std, y_train, x_test_std, y_test, ALPHA=.05)
+#     elasticnet_regression(x_train_std, y_train, x_test_std, y_test, ALPHA=.05)
+#     rf_regression(x_train_std, y_train, x_test_std, y_test)
+
+if __name__ == "__main__":
+    main() 
