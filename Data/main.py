@@ -16,38 +16,38 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import r2_score
 from sklearn.metrics import mean_absolute_error
 
+class Congragate:
+    def __init__(self, dir: str) -> pd.DataFrame:
+        self.filenames = os.listdir(dir)
+        self.fname_pd_dict: dict[str, pd.DataFrame] = {}
+        for filename in self.filenames:
+            pathname = os.path.join(dir, filename)
+            if os.path.isfile(pathname):
+                if os.path.splitext(pathname)[1] == ".csv":
+                    fname_pd_dict[filename] = pd.read_csv(pathname)
+        
+        sorted_stock_index = fname_pd_dict["ca_monthly_stock_index.csv"]
+        sorted_stock_index = sorted_stock_index.groupby("Date")["Close"].mean()
+        sorted_stock_index = sorted_stock_index.reset_index()
 
-def congregate(dir: str) -> pd.DataFrame:
-    filenames = os.listdir(dir)
-    fname_pd_dict: dict[str, pd.DataFrame] = {}
-    for filename in filenames:
-        pathname = os.path.join(dir, filename)
-        if os.path.isfile(pathname):
-            if os.path.splitext(pathname)[1] == ".csv":
-                fname_pd_dict[filename] = pd.read_csv(pathname)
-    
-    sorted_stock_index = fname_pd_dict["ca_monthly_stock_index.csv"]
-    sorted_stock_index = sorted_stock_index.groupby("Date")["Close"].mean()
-    sorted_stock_index = sorted_stock_index.reset_index()
+        
+        sorted_cpi = fname_pd_dict["ca_quarterly_cpi.csv"]
 
-    
-    sorted_cpi = fname_pd_dict["ca_quarterly_cpi.csv"]
+        sorted_gdp = fname_pd_dict["ca_quarterly_gdp.csv"][["Date", "GDP per capita"]][:56]
 
-    sorted_gdp = fname_pd_dict["ca_quarterly_gdp.csv"][["Date", "GDP per capita"]][:56]
+        sorted_interest_rate = fname_pd_dict["ca_quarterly_interest_rate.csv"]
 
-    sorted_interest_rate = fname_pd_dict["ca_quarterly_interest_rate.csv"]
-
-    sorted_unemployment_rate = fname_pd_dict["ca_quarterly_unemployment_rate.csv"][["Date", "Unemployment Rate"]][:56]
-
-
-    merged_zero = sorted_gdp.merge(sorted_interest_rate, left_on="Date", right_on="Date")
-    merged_one = sorted_cpi.merge(sorted_unemployment_rate, left_on="Date", right_on="Date")
-    merged = merged_zero.merge(merged_one, left_on="Date", right_on="Date")
-    
-    finalized = pd.merge(sorted_stock_index, merged, on="Date")
+        sorted_unemployment_rate = fname_pd_dict["ca_quarterly_unemployment_rate.csv"][["Date", "Unemployment Rate"]][:56]
 
 
-    return finalized
+        merged_zero = sorted_gdp.merge(sorted_interest_rate, left_on="Date", right_on="Date")
+        merged_one = sorted_cpi.merge(sorted_unemployment_rate, left_on="Date", right_on="Date")
+        merged = merged_zero.merge(merged_one, left_on="Date", right_on="Date")
+        
+        finalized = pd.merge(sorted_stock_index, merged, on="Date")
+
+
+        return finalized
 
 
 def plot_heatmap(df: pd.DataFrame, dir: str) -> None:
@@ -218,21 +218,21 @@ def rf_regression(x_train_std: pd.DataFrame, y_train: pd.DataFrame,
     plt.show()    
 
 
-def main():
-    # Building single DataFrame from different datasets 
-    directory = "./Data/Canada/"
-    canada_df = congregate(directory)
+# def main():
+#     # Building single DataFrame from different datasets 
+#     directory = "./Data/Canada/"
+#     canada_df = (directory)
 
-    # Plotting heatmap and understand the relation between the variables
-    plot_heatmap(canada_df, directory)
+#     # Plotting heatmap and understand the relation between the variables
+#     plot_heatmap(canada_df, directory)
 
-    # Preprocess of Data
-    x_train_std, x_test_std, y_train, y_test = preprocess_standard(canada_df)
+#     # Preprocess of Data
+#     x_train_std, x_test_std, y_train, y_test = preprocess_standard(canada_df)
 
-    ridge_regression(x_train_std, y_train, x_test_std, y_test, ALPHA=10.0)
-    lasso_regression(x_train_std, y_train, x_test_std, y_test, ALPHA=.05)
-    elasticnet_regression(x_train_std, y_train, x_test_std, y_test, ALPHA=.05)
-    rf_regression(x_train_std, y_train, x_test_std, y_test)
+#     ridge_regression(x_train_std, y_train, x_test_std, y_test, ALPHA=10.0)
+#     lasso_regression(x_train_std, y_train, x_test_std, y_test, ALPHA=.05)
+#     elasticnet_regression(x_train_std, y_train, x_test_std, y_test, ALPHA=.05)
+#     rf_regression(x_train_std, y_train, x_test_std, y_test)
 
 if __name__ == "__main__":
     main() 
