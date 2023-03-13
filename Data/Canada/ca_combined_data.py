@@ -46,6 +46,7 @@ def congregate(dir: str) -> pd.DataFrame:
     
     finalized = pd.merge(sorted_stock_index, merged, on="Date")
 
+
     return finalized
 
 
@@ -54,13 +55,13 @@ def plot_heatmap(df: pd.DataFrame, dir: str) -> None:
     comment later
     """
     # Build multivariate linkage chart
-    sns.pairplot(df, size=1.0)
+    sns.pairplot(df, height=1.0)
     plt.savefig(dir + "multivariate_linkage_chart.png")
     plt.close("all")
 
     # Calculate the correlation coefficient matrix
     # pandas.corr take out NaN value when calculating
-    corr = df.corr(numeric_only=True)
+    corr = df.corr()
     fig, ax = plt.subplots(figsize=(10, 10))
 
     # Plot a heatmap
@@ -76,14 +77,16 @@ def preprocess_standard(df: pd.DataFrame) -> pd.DataFrame:
     Split the dataset for training data and test data and work on
     standardization.
     """
+    df = df.fillna(0)
     features = df.loc[:, df.columns != "Interst Rate"]
+    features = pd.get_dummies(features, drop_first=True)
     label = df["Interest Rate"]
     x_train, x_test, y_train, y_test = \
-        train_test_split(features, label, test_size=0.2, random_state=1)
+        train_test_split(features, label, test_size=0.3, random_state=1234)
     
     # Standardization (Z-score normalization) of data
     sc = StandardScaler()
-    sc.fix(x_train) # Standardize training data
+    sc.fit(x_train) # Standardize training data
     x_train_std = sc.transform(x_train)
     x_test_std = sc.transform(x_test)
 
@@ -92,7 +95,7 @@ def preprocess_standard(df: pd.DataFrame) -> pd.DataFrame:
 
 def ridge_regression(x_train_std: pd.DataFrame, y_train: pd.DataFrame,
                      x_test_std: pd.DataFrame, y_test: pd.DataFrame,
-                     ALPHA: float=10.0):
+                     ALPHA: float=10.0) -> None:
     """
     Predict using Ridge Regression and evaluate its outcomes.
     """
@@ -112,11 +115,107 @@ def ridge_regression(x_train_std: pd.DataFrame, y_train: pd.DataFrame,
     # It is said to be less susceptible to outliers as errors are not squared.
     mae_ridge = mean_absolute_error(y_test, pred_ridge)
 
-    print(f"R2 : {r2_ridge}")
-    print(f"MAE: {mae_ridge}")
-    
+    print("Evaluation: Ridge Regression")
+    print(f"R2  : {r2_ridge}")
+    print(f"MAE : {mae_ridge}")
 
-    return pred_ridge
+    # Regression Coefficient
+    print(f"Coef: {ridge.coef_}")
+
+    # Scatterplot between predicted and observed data
+    plt.xlabel("pred_ridge")
+    plt.ylabel("y_test")
+    plt.scatter(pred_ridge, y_test)
+    plt.show()
+
+
+def lasso_regression(x_train_std: pd.DataFrame, y_train: pd.DataFrame,
+                     x_test_std: pd.DataFrame, y_test: pd.DataFrame,
+                     ALPHA: float=.05) -> None:
+    """
+    """
+    lasso = Lasso(alpha=ALPHA)
+    lasso.fit(x_train_std, y_train)
+
+    pred_lasso = lasso.predict(x_test_std)
+
+    # Evaluation #1: R^2
+    r2_lasso = r2_score(y_test, pred_lasso)
+
+    # Evaluation #2: MAE
+    mae_lasso = mean_absolute_error(y_test, pred_lasso)
+
+    print("Evaluation: Lasso Regression")
+    print("R2 : %.3f" % r2_lasso)
+    print("MAE : %.3f" % mae_lasso)
+
+    # Regression Coefficient
+    print("Coef = ", lasso.coef_)
+
+    # Scatterplot between predicted and observed data
+    plt.xlabel("pred_lasso")
+    plt.ylabel("y_test")
+    plt.scatter(pred_lasso, y_test)
+    plt.show()
+
+
+def elasticnet_regression(x_train_std: pd.DataFrame, y_train: pd.DataFrame,
+                     x_test_std: pd.DataFrame, y_test: pd.DataFrame,
+                     ALPHA: float=.05) -> None:
+    """
+    """
+    elasticnet = ElasticNet(alpha=ALPHA)
+    elasticnet.fit(x_train_std, y_train)
+
+    pred_elasticnet = elasticnet.predict(x_test_std)
+
+    # Evaluation #1: R^2
+    r2_elasticnet = r2_score(y_test, pred_elasticnet)
+
+    # Evaluation #2: MAE
+    mae_elasticnet = mean_absolute_error(y_test, pred_elasticnet)
+
+    print("Evaluation: ElasticNet Regression")
+    print("R2 : %.3f" % r2_elasticnet)
+    print("MAE : %.3f" % mae_elasticnet)
+
+    # Regression Coefficient
+    print("Coef = ", elasticnet.coef_)
+
+    # Scatterplot between predicted and observed data
+    plt.xlabel("pred_lasso")
+    plt.ylabel("y_test")
+    plt.scatter(pred_elasticnet, y_test)
+    plt.show()
+
+
+def rf_regression(x_train_std: pd.DataFrame, y_train: pd.DataFrame,
+                 x_test_std: pd.DataFrame, y_test: pd.DataFrame,
+                 ALPHA: float=.05):
+    """
+    """
+    rf = RandomForestRegressor()
+    rf.fit(x_train_std, y_train)
+
+    pred_rf = rf.predict(x_test_std)
+    # Evaluation #1: R^2
+    r2_rf = r2_score(y_test, pred_rf)
+
+    # Evaluation #2: MAE
+    mae_rf = mean_absolute_error(y_test, pred_rf)
+
+    print("Evaluation: ElasticNet Regression")
+    print("R2 : %.3f" % r2_rf)
+    print("MAE : %.3f" % mae_rf)
+
+    # Regression Coefficient
+    print("Coef = ", rf.feature_importances_)
+
+    # Scatterplot between predicted and observed data
+    plt.xlabel("pred_rf")
+    plt.ylabel("y_test")
+    plt.scatter(pred_rf, y_test)
+    plt.show()    
 
 
 def main():
@@ -124,8 +223,16 @@ def main():
     directory = "./Data/Canada/"
     canada_df = congregate(directory)
 
+    # Plotting heatmap and understand the relation between the variables
     plot_heatmap(canada_df, directory)
-    
+
+    # Preprocess of Data
+    x_train_std, x_test_std, y_train, y_test = preprocess_standard(canada_df)
+
+    ridge_regression(x_train_std, y_train, x_test_std, y_test, ALPHA=10.0)
+    lasso_regression(x_train_std, y_train, x_test_std, y_test, ALPHA=.05)
+    elasticnet_regression(x_train_std, y_train, x_test_std, y_test, ALPHA=.05)
+    rf_regression(x_train_std, y_train, x_test_std, y_test)
 
 if __name__ == "__main__":
     main() 
