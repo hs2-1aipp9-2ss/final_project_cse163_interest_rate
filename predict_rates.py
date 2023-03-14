@@ -36,14 +36,16 @@ class PredictRates:
         gdp = self._fname_pd_dict[f"{self._country}_quarterly_gdp.csv"][["Date", "GDP per capita"]][:56]
 
         interest_rate = self._fname_pd_dict[f"{self._country}_quarterly_interest_rate.csv"][["Date", "Interest Rate"]]
+        interest_rate = interest_rate.groupby("Date")["Interest Rate"].mean()
 
         unemployment_rate = self._fname_pd_dict[f"{self._country}_quarterly_unemployment_rate.csv"][["Date", "Unemployment Rate"]][:56]
 
         merged_zero = gdp.merge(interest_rate, left_on="Date", right_on="Date")
         merged_one = cpi.merge(unemployment_rate, left_on="Date", right_on="Date")
         merged = merged_zero.merge(merged_one, left_on="Date", right_on="Date")
-        
-        if self._country + "_monthly_stock_index.csv" in os.listdir(dir):
+
+        check_stock = self._country + "_monthly_stock_index.csv"
+        if check_stock in os.listdir(dir):
             sorted_stock_index = self._fname_pd_dict[f"{self._country}_monthly_stock_index.csv"]
             sorted_stock_index['Close'] = sorted_stock_index['Close'].astype(str).str.strip()
             sorted_stock_index['Close'] = sorted_stock_index['Close'].astype(str).str.replace(',','')
@@ -53,6 +55,8 @@ class PredictRates:
             self._df: pd.DataFrame = pd.merge(sorted_stock_index, merged, on="Date")
         else:
             self._df = merged
+        
+        print(self._df)
         
 
     def plot_heatmap(self) -> None:
@@ -86,8 +90,11 @@ class PredictRates:
         features = self._df.loc[:, self._df.columns != "Interest Rate"]
         features = pd.get_dummies(features, drop_first=True)
         label = self._df["Interest Rate"]
-        x_train, x_test, self._y_train, self._y_test = \
-            train_test_split(features, label, test_size=0.3, random_state=1234)
+
+
+        x_train, x_test, self._y_train, self._y_test = train_test_split(features, label, test_size=0.35714286, shuffle=False)
+        print(x_train)
+        print(x_test)
         
         # Standardization (Z-score normalization) of data
         sc = StandardScaler()
@@ -124,90 +131,26 @@ class PredictRates:
         print(f"Coef: {self._ridge.coef_}")
 
         # Scatterplot between predicted and observed data
-        plt.xlabel("pred_ridge")
-        plt.ylabel("y_test")
-        plt.scatter(pred_ridge, self._y_test)
+        fig, ax = plt.subplots(1)
+
+        after_2017 = self._df['Date'].str[0:4].astype(int) > 2017
+        test_data = self._df[after_2017]
+        print(test_data['Date'])
+        print(pred_ridge)
+
+        if len(test_data) < len(pred_ridge):
+            dif = len(pred_ridge) - len(test_data)
+            pred_ridge = pred_ridge[:-dif]
+        elif len(test_data) > len(pred_ridge):
+            dif = len(test_data) - len(pred_ridge)
+            test_data = test_data[:-dif]
+
+
+        plt.xlabel("Quarter")
+        plt.ylabel("Interest Rate")
+        plt.title(self._country + " Predicted Interest Rates vs Real Interest Rates")
+        plt.plot(test_data['Date'], pred_ridge, c='Blue', label="Prediction")
+        plt.plot(test_data['Date'], test_data['Interest Rate'], c='Red', label="Real")
+        plt.xticks(rotation=-45)
+        plt.legend(loc = "upper left")
         plt.savefig("Results/" + self._country + "_Ridge Regression")
-
-
-    def lasso_regression(self, ALPHA: float=.05) -> None:
-        """
-        """
-        lasso = Lasso(alpha=ALPHA)
-        lasso.fit(self._x_train_std, self._y_train)
-
-        pred_lasso = lasso.predict(self._x_test_std)
-
-        # Evaluation #1: R^2
-        r2_lasso = r2_score(self._y_test, pred_lasso)
-
-        # Evaluation #2: MAE
-        mae_lasso = mean_absolute_error(self._y_test, pred_lasso)
-
-        print("Evaluation: Lasso Regression")
-        print("R2 : %.3f" % r2_lasso)
-        print("MAE : %.3f" % mae_lasso)
-
-        # Regression Coefficient
-        print("Coef = ", lasso.coef_)
-
-        # Scatterplot between predicted and observed data
-        plt.xlabel("pred_lasso")
-        plt.ylabel("y_test")
-        plt.scatter(pred_lasso, self._y_test)
-        plt.savefig("Results/" + self._country + "_Lasso Regression")
-
-
-    def elasticnet_regression(self, ALPHA: float=.05) -> None:
-        """
-        """
-        elasticnet = ElasticNet(alpha=ALPHA)
-        elasticnet.fit(self._x_train_std, self._y_train)
-
-        pred_elasticnet = elasticnet.predict(self._x_test_std)
-
-        # Evaluation #1: R^2
-        r2_elasticnet = r2_score(self._y_test, pred_elasticnet)
-
-        # Evaluation #2: MAE
-        mae_elasticnet = mean_absolute_error(self._y_test, pred_elasticnet)
-
-        print("Evaluation: ElasticNet Regression")
-        print("R2 : %.3f" % r2_elasticnet)
-        print("MAE : %.3f" % mae_elasticnet)
-
-        # Regression Coefficient
-        print("Coef = ", elasticnet.coef_)
-
-        # Scatterplot between predicted and observed data
-        plt.xlabel("pred_ElasticNet")
-        plt.ylabel("y_test")
-        plt.scatter(pred_elasticnet, self._y_test)
-        plt.savefig("Results/" + self._country + "_ElasticNet Regression")
-
-
-    def rf_regression(self, ALPHA: float=.05):
-        """
-        """
-        rf = RandomForestRegressor()
-        rf.fit(self._x_train_std, self._y_train)
-
-        pred_rf = rf.predict(self._x_test_std)
-        # Evaluation #1: R^2
-        r2_rf = r2_score(self._y_test, pred_rf)
-
-        # Evaluation #2: MAE
-        mae_rf = mean_absolute_error(self._y_test, pred_rf)
-
-        print("Evaluation: Random Forest Regression")
-        print("R2 : %.3f" % r2_rf)
-        print("MAE : %.3f" % mae_rf)
-
-        # Regression Coefficient
-        print("Coef = ", rf.feature_importances_)
-
-        # Scatterplot between predicted and observed data
-        plt.xlabel("pred_rf")
-        plt.ylabel("y_test")
-        plt.scatter(pred_rf, self._y_test)
-        plt.savefig("Results/" + self._country + "_Random Forest Regression")

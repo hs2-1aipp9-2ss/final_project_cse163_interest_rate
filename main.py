@@ -19,9 +19,10 @@ def create_pr(countries: list[str]) -> None:
         pr.elasticnet_regression(pred[country], ALPHA=.05)
         pr.rf_regression(pred[country])
 
+
 def main():
-    #countries = ['Canada', 'australia', 'japan', 'united_states', 'united_kingdom', 'south_africa', 'south_korea', 'euro_zone']
-    countries = ['euro_zone']
+    countries = ['Canada', 'australia', 'japan', 'united_states', 'united_kingdom', 'south_africa', 'south_korea', 'euro_zone']
+    #countries = ['south_africa']
     create_pr(countries)
 
 if __name__ == "__main__":
