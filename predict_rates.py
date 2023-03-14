@@ -1,3 +1,10 @@
+'''
+Peter Poliakov, Hiromu Sugiyama, Raymond Smith
+CSE 163
+This file contains the PredictRates class, which takes data
+of 4 different economic indicators: GDP, unemployment, stock,
+and CPI and predicts changing interest rates.
+'''
 import os
 import pandas as pd
 from sklearn.preprocessing import StandardScaler
@@ -16,6 +23,11 @@ from sklearn.metrics import mean_absolute_error
 class PredictRates:
 
     def __init__(self, dir: str, country: str) -> pd.DataFrame:
+        '''
+        Initializes a PredictRates object. Takes a str containing
+        the directory and a str containing the country and merges them
+        by date.
+        '''
         self._filenames = os.listdir(dir)
         self._country = country
         self._fname_pd_dict: dict[str, pd.DataFrame] = {}
@@ -63,7 +75,8 @@ class PredictRates:
 
     def plot_heatmap(self) -> None:
         """
-        comment later
+        Plots a heatmap showing how different economic indicators affect
+        interest rates.
         """
         # Build multivariate linkage chart
         sns.pairplot(self._df, height=1.0)
