@@ -20,7 +20,7 @@ def create_pr(countries: list[str]) -> None:
         pr.rf_regression(pred[country])
 
 def main():
-    countries = ['Canada', 'korea']
+    countries = ['Canada', 'australia']
     create_pr(countries)
 
 if __name__ == "__main__":
