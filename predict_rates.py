@@ -85,11 +85,11 @@ class PredictRates:
         fig, ax = plt.subplots(figsize=(10, 10))
 
         # Plot a heatmap
-        # Param: annot=bool, fmt="decimals", cmap="color" 
+        # Param: annot=bool, fmt="decimals", cmap="color"
         sns.heatmap(corr, annot=True, fmt=".2f", cmap="Purples", linewidths=.5,
                     vmax=1, vmin=-1, center=0, square=True)
         plt.title(self._country + " Heatmap")
-        plt.savefig("Results/" + self._country + "_heatmap.png", 
+        plt.savefig("Results/" + self._country + "_heatmap.png",
                     facecolor="azure")
         plt.close("all")
 
@@ -105,10 +105,10 @@ class PredictRates:
 
         x_train, x_test, self._y_train, self._y_test = train_test_split(
             features, label, test_size=0.35714286, shuffle=False)
-        
+
         # Standardization (Z-score normalization) of data
         sc = StandardScaler()
-        sc.fit(x_train) 
+        sc.fit(x_train)
         self._x_train_std = sc.transform(x_train)
         self._x_test_std = sc.transform(x_test)
 
@@ -127,7 +127,7 @@ class PredictRates:
         r2_ridge = r2_score(self._y_test, pred_ridge)
 
         # Evaluation #2: MAE (Mean Absolute Error)
-        # The closer the predicted values are to the observed values, 
+        # The closer the predicted values are to the observed values,
         # the smaller MAE.
         mae_ridge = mean_absolute_error(self._y_test, pred_ridge)
 
@@ -155,7 +155,7 @@ class PredictRates:
 
         plt.xlabel("Quarter")
         plt.ylabel("Interest Rate")
-        plt.title(self._country + 
+        plt.title(self._country +
                   " Predicted Interest Rates vs Real Interest Rates")
         plt.plot(test_data['Date'], pred_ridge, c='Blue', label="Prediction")
         plt.plot(test_data['Date'], test_data['Interest Rate'],
