@@ -51,21 +51,20 @@ My presentation on the subject can be found in this video _submit_jt_later_ and 
     │   │   │
     │   └───...
     └───Results
-    │   │   Canada_Ridge Regression.png
-    │   │   Canada_heatmap.png
+    │   │   canada_Ridge Regression.png
+    │   │   canada_heatmap.png
     │   │   ...
     ```
 2. Run predict_rates.py to set up PredictRate object we will use in main.py
 3. Run main.py to build object for each country
     - This will take a long time due to necessity to retrieve large amount of data
     - Prints out the evaluations (R^2 and MAE outputs) in the console
-       Evaluation #1: R^2
-         The closer the predicted values are to the observed values,
-         the closer the value of R^2 becomes to 1. 
-       Evaluation #2: MAE (Mean Absolute Error)
-          The closer the predicted values are to the observed values, 
-          the smaller MAE.
-          It is said to be less susceptible to outliers as errors are not squared.
+      - Evaluation #1: R^2
+        - The closer the predicted values are to the observed values,
+        - the closer the value of R^2 becomes to 1. 
+      - Evaluation #2: MAE (Mean Absolute Error)
+        - The closer the predicted values are to the observed values, the smaller MAE.
+        - It is said to be less susceptible to outliers as errors are not squared.
     - After running this file, it will automatically add heatmap and regression model visual image in the Results folder. 
 
 > **Note:** For basic tests, just run tests.py
