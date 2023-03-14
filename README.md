@@ -25,11 +25,39 @@ My presentation on the subject can be found in this video _submit_jt_later_ and 
 > **Installation Line:** pip install pandas/seaborn/atplotlib/sklearn
 
 ## Steps for Result Reproduction
-1. aaaa
-2. bbbb
-3. cccc
-4. dddd
+1. Check if the data folder has its correct structure
+  ```
+  Main Directory
+  │   README.md
+  │   main.py
+  │   predict_rates.py
+  │
+  └───data
+  │   │
+  │   └───Australia
+  │   │   │   australia_monthly_stock_index.csv
+  │   │   │   australia_quarterly_cpi.csv
+  │   │   │   ...
+  │   │   │
+  │   └───Canada
+  │   │   │   canada_monthly_stock_index.csv
+  │   │   │   canada_quarterly_cpi.csv
+  │   │   │   ...
+  │   │   │
+  │   └───Japan
+  │   │   │   japan_zone_monthly_stock_index.csv
+  │   │   │   ...
+  │   │   │
+  │   └───...
+  └───Results
+  │   │   Canada_Ridge Regression.png
+  │   │   Canada_heatmap.png
+  │   │   ...
+  ```
+3. bbbb
+4. cccc
+5. dddd
 
 > **Note:** For basic tests, just run tests.py
 
-# Thanks for taking the time reading about our first Data Science Project
+Thanks for taking the time reading about our first Data Science Project
