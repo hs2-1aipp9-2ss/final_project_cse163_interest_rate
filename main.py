@@ -18,7 +18,7 @@ def create_pr(countries: list[str]) -> None:
 
 
 def main():
-    countries = ['Canada', 'australia', 'japan', 'united_states', 'united_kingdom', 'south_africa', 'south_korea', 'euro_zone']
+    countries = ['canada', 'australia', 'japan', 'united_states', 'united_kingdom', 'south_africa', 'south_korea', 'euro_zone']
     #countries = ['south_africa']
     create_pr(countries)
 
