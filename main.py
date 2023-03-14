@@ -15,9 +15,6 @@ def create_pr(countries: list[str]) -> None:
         pr.preprocess_standard(pred[country])
 
         pr.ridge_regression(pred[country], ALPHA=10.0)
-        pr.lasso_regression(pred[country], ALPHA=.05)
-        pr.elasticnet_regression(pred[country], ALPHA=.05)
-        pr.rf_regression(pred[country])
 
 
 def main():

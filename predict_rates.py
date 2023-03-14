@@ -77,7 +77,8 @@ class PredictRates:
         # Param: annot=bool, fmt="decimals", cmap="color" 
         sns.heatmap(corr, annot=True, fmt=".2f", cmap="Purples", linewidths=.5,
                     vmax=1, vmin=-1, center=0, square=True)
-        plt.savefig("Results/" + self._country + "_max_corr.png", facecolor="azure")
+        plt.title(self._country + " Heatmap")
+        plt.savefig("Results/" + self._country + "_heatmap.png", facecolor="azure")
         plt.close("all")
 
 
