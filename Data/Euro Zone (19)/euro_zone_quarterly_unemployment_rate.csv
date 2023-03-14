@@ -1,4 +1,4 @@
-﻿"LOCATION","INDICATOR","SUBJECT","MEASURE","FREQUENCY","Date","Value","Flag Codes"
+﻿"LOCATION","INDICATOR","SUBJECT","MEASURE","FREQUENCY","Date","Unemployment Rate","Flag Codes"
 "EA19","HUR","TOT","PC_LF","Q","2009-Q1",9.066667,
 "EA19","HUR","TOT","PC_LF","Q","2009-Q2",9.6,
 "EA19","HUR","TOT","PC_LF","Q","2009-Q3",9.9,
