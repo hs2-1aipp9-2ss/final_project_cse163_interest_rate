@@ -78,10 +78,6 @@ class PredictRates:
         Plots a heatmap showing how different economic indicators affect
         interest rates.
         """
-        # Build multivariate linkage chart
-        sns.pairplot(self._df, height=1.0)
-        plt.savefig("Results/" + self._country + "_multivariate_linkage_chart.png")
-        plt.close("all")
 
         # Calculate the correlation coefficient matrix
         # pandas.corr take out NaN value when calculating
