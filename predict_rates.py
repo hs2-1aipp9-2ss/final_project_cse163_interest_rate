@@ -30,16 +30,12 @@ class PredictRates:
                 if os.path.splitext(pathname)[1] == ".csv":
                     self._fname_pd_dict[filename] = pd.read_csv(pathname)
         
-        sorted_stock_index = self._fname_pd_dict[f"{self._country}_monthly_stock_index.csv"]
-        sorted_stock_index = sorted_stock_index.groupby("Date")["Close"].mean()
-        sorted_stock_index = sorted_stock_index.reset_index()
-
-        
-        cpi = self._fname_pd_dict[f"{self._country}_quarterly_cpi.csv"]
+ 
+        cpi = self._fname_pd_dict[f"{self._country}_quarterly_cpi.csv"][["Date", "CPI"]]
 
         gdp = self._fname_pd_dict[f"{self._country}_quarterly_gdp.csv"][["Date", "GDP per capita"]][:56]
 
-        interest_rate = self._fname_pd_dict[f"{self._country}_quarterly_interest_rate.csv"]
+        interest_rate = self._fname_pd_dict[f"{self._country}_quarterly_interest_rate.csv"][["Date", "Interest Rate"]]
 
         unemployment_rate = self._fname_pd_dict[f"{self._country}_quarterly_unemployment_rate.csv"][["Date", "Unemployment Rate"]][:56]
 
@@ -47,8 +43,17 @@ class PredictRates:
         merged_one = cpi.merge(unemployment_rate, left_on="Date", right_on="Date")
         merged = merged_zero.merge(merged_one, left_on="Date", right_on="Date")
         
-        self._df: pd.DataFrame = pd.merge(sorted_stock_index, merged, on="Date")
-
+        if self._country + "_monthly_stock_index.csv" in os.listdir(dir):
+            sorted_stock_index = self._fname_pd_dict[f"{self._country}_monthly_stock_index.csv"]
+            sorted_stock_index['Close'] = sorted_stock_index['Close'].astype(str).str.strip()
+            sorted_stock_index['Close'] = sorted_stock_index['Close'].astype(str).str.replace(',','')
+            sorted_stock_index['Close'] = pd.to_numeric(sorted_stock_index['Close'])
+            sorted_stock_index = sorted_stock_index.groupby("Date")["Close"].mean()
+            sorted_stock_index = sorted_stock_index.reset_index()
+            self._df: pd.DataFrame = pd.merge(sorted_stock_index, merged, on="Date")
+        else:
+            self._df = merged
+        
 
     def plot_heatmap(self) -> None:
         """
@@ -78,7 +83,7 @@ class PredictRates:
         standardization.
         """
         self._df = self._df.fillna(0)
-        features = self._df.loc[:, self._df.columns != "Interst Rate"]
+        features = self._df.loc[:, self._df.columns != "Interest Rate"]
         features = pd.get_dummies(features, drop_first=True)
         label = self._df["Interest Rate"]
         x_train, x_test, self._y_train, self._y_test = \

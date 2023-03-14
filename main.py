@@ -5,7 +5,7 @@ import os
 def create_pr(countries: list[str]) -> None:
      pred = {}
      for country in countries:
-        dir = "./Data/" + country + "/"
+        dir = "./Data/" + country.capitalize().replace('_',' ') + "/"
         pred[country] = pr(dir, country) 
     
         # Plotting heatmap and understand the relation between the variables
@@ -20,7 +20,8 @@ def create_pr(countries: list[str]) -> None:
         pr.rf_regression(pred[country])
 
 def main():
-    countries = ['Canada', 'australia']
+    #countries = ['Canada', 'australia', 'japan', 'united_states', 'united_kingdom', 'south_africa', 'south_korea', 'euro_zone']
+    countries = ['euro_zone']
     create_pr(countries)
 
 if __name__ == "__main__":
