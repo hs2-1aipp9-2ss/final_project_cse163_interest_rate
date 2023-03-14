@@ -1,4 +1,4 @@
-# Interest Rate and ...? -- An Analysis of Interest Rate and Differnt Economic Indicators --
+# Interest Rate and ...? -- An Analysis of Interest Rate and Different Economic Indicators --
 
 Report by Peter Poliakov, Hiromu Sugiyama, Raymond Smith
 
